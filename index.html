@@ -6,8 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Apartment Price Predictor – India</title>
 
-  <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
   <style>
     :root {
@@ -68,12 +67,10 @@
       position: relative;
       overflow: hidden;
 
-      background: linear-gradient(
-        135deg,
-        #203fbd 0%,
-        #315bea 52%,
-        #5967f2 100%
-      );
+      background: linear-gradient(135deg,
+          #203fbd 0%,
+          #315bea 52%,
+          #5967f2 100%);
 
       color: #fff;
       padding: 20px 20px 20px;
@@ -137,8 +134,7 @@
     .layout {
       display: grid;
       grid-template-columns:
-        minmax(0, 1.05fr)
-        minmax(390px, .95fr);
+        minmax(0, 1.05fr) minmax(390px, .95fr);
 
       gap: 24px;
       align-items: start;
@@ -205,9 +201,7 @@
     .search-row {
       display: grid;
       grid-template-columns:
-        minmax(0, 1fr)
-        auto
-        auto;
+        minmax(0, 1fr) auto auto;
 
       gap: 9px;
       margin-bottom: 10px;
@@ -525,7 +519,7 @@
       border-radius: 12px;
     }
 
-    .notes p + p {
+    .notes p+p {
       margin-top: 7px;
     }
 
@@ -622,6 +616,11 @@
         and get an approximate AI-powered market estimate.
       </p>
 
+      <p>
+        Estimates use approximate market rates and are for guidance only.
+        Not financial advice.
+      </p>
+
     </div>
   </header>
 
@@ -662,24 +661,13 @@
 
         <div class="search-row">
 
-          <input
-            id="q"
-            type="text"
-            placeholder="Search"
-            aria-label="Search location"
-          >
+          <input id="q" type="text" placeholder="Search" aria-label="Search location">
 
-          <button
-            class="primary"
-            id="searchBtn"
-          >
+          <button class="primary" id="searchBtn">
             Search
           </button>
 
-          <button
-            class="ghost"
-            id="gpsBtn"
-          >
+          <button class="ghost" id="gpsBtn">
             Use my location
           </button>
 
@@ -688,18 +676,12 @@
 
         <!-- MAP -->
 
-        <div
-          id="map"
-          aria-label="Interactive map"
-        ></div>
+        <div id="map" aria-label="Interactive map"></div>
 
 
         <!-- CONFIRMED LOCATION -->
 
-        <div
-          class="picked"
-          id="pickedBox"
-        >
+        <div class="picked" id="pickedBox">
 
           <strong id="pickedLabel">
             Confirmed location:
@@ -725,10 +707,7 @@
              PROPERTY DETAILS
         ======================================================== -->
 
-        <section
-          class="card"
-          id="details"
-        >
+        <section class="card" id="details">
 
           <div class="section-heading">
 
@@ -785,14 +764,7 @@
                 Carpet area (sq ft)
               </label>
 
-              <input
-                id="area"
-                type="number"
-                value="950"
-                min="150"
-                max="16000"
-                placeholder="e.g. 1250"
-              >
+              <input id="area" type="number" value="950" min="150" max="16000" placeholder="e.g. 1250">
 
             </div>
 
@@ -838,10 +810,7 @@
                   New / under construction
                 </option>
 
-                <option
-                  value="3"
-                  selected
-                >
+                <option value="3" selected>
                   1–5 years
                 </option>
 
@@ -866,10 +835,7 @@
 
           <!-- PREDICT BUTTON -->
 
-          <button
-            class="primary go"
-            id="predictBtn"
-          >
+          <button class="primary go" id="predictBtn">
             Predict price
           </button>
 
@@ -880,11 +846,7 @@
              RESULT
         ======================================================== -->
 
-        <section
-          class="card"
-          id="result"
-          aria-live="polite"
-        >
+        <section class="card" id="result" aria-live="polite">
 
           <div class="result-head">
 
@@ -894,23 +856,14 @@
                 Estimated apartment price
               </div>
 
-              <div
-                class="price"
-                id="price"
-              ></div>
+              <div class="price" id="price"></div>
 
-              <div
-                class="range"
-                id="range"
-              ></div>
+              <div class="range" id="range"></div>
 
             </div>
 
 
-            <span
-              class="conf"
-              id="conf"
-            ></span>
+            <span class="conf" id="conf"></span>
 
           </div>
 
@@ -928,9 +881,7 @@
                 Selected BHK
               </span>
 
-              <strong
-                id="resultBhk"
-              ></strong>
+              <strong id="resultBhk"></strong>
 
             </div>
 
@@ -943,9 +894,7 @@
                 Property type
               </span>
 
-              <strong
-                id="resultType"
-              ></strong>
+              <strong id="resultType"></strong>
 
             </div>
 
@@ -958,9 +907,7 @@
                 Carpet area
               </span>
 
-              <strong
-                id="resultArea"
-              ></strong>
+              <strong id="resultArea"></strong>
 
             </div>
 
@@ -969,10 +916,7 @@
 
           <!-- NOTES -->
 
-          <div
-            class="notes"
-            id="notes"
-          ></div>
+          <div class="notes" id="notes"></div>
 
         </section>
 
@@ -981,15 +925,6 @@
     </div>
 
   </main>
-
-
-  <!-- ================= FOOTER ================= -->
-
-  <footer>
-    Estimates use approximate market rates and are for guidance only.
-    Not financial advice.
-  </footer>
-
 
   <!-- ================= LEAFLET ================= -->
 
@@ -1331,14 +1266,14 @@
 
       )
 
-      .bindTooltip(
-        r[0] +
-        " – ₹" +
-        r[3].toLocaleString("en-IN") +
-        "/sq ft"
-      )
+        .bindTooltip(
+          r[0] +
+          " – ₹" +
+          r[3].toLocaleString("en-IN") +
+          "/sq ft"
+        )
 
-      .addTo(map);
+        .addTo(map);
 
     });
 
@@ -2067,5 +2002,4 @@
   </script>
 
 </body>
-
 </html>
