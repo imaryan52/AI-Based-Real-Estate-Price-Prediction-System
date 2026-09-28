@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apartment Price Predictor – India</title>
+
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+
+  <style>
+    :root {
+      --bg: #f5f8ff;
+      --surface: #ffffff;
+      --surface-soft: #f8faff;
+      --ink: #16213d;
+      --muted: #667085;
+      --line: #e4e9f2;
+      --brand: #315bea;
+      --brand-dark: #2448c7;
+      --brand-soft: #edf2ff;
+      --success: #087443;
+      --success-bg: #e9f8f0;
+      --warning: #9a5b00;
+      --warning-bg: #fff7e8;
+      --shadow: 0 18px 50px rgba(34, 55, 105, .10);
+      --shadow-soft: 0 8px 28px rgba(34, 55, 105, .07);
+      --radius: 20px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        "Segoe UI", Roboto, Arial, sans-serif;
+
+      background:
+        radial-gradient(circle at 10% 0%,
+          rgba(49, 91, 234, .08),
+          transparent 28%),
+        radial-gradient(circle at 90% 5%,
+          rgba(94, 234, 212, .08),
+          transparent 24%),
+        var(--bg);
+
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    /* ================= HEADER ================= */
+
+    header {
+      position: relative;
+      overflow: hidden;
+
+      background: linear-gradient(
+        135deg,
+        #203fbd 0%,
+        #315bea 52%,
+        #5967f2 100%
+      );
+
+      color: #fff;
+      padding: 20px 20px 20px;
+
+      box-shadow:
+        0 8px 30px rgba(36, 72, 199, .20);
+    }
+
+    header:before,
+    header:after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .08);
+      pointer-events: none;
+    }
+
+    header:before {
+      width: 260px;
+      height: 260px;
+      right: -70px;
+      top: -130px;
+    }
+
+    header:after {
+      width: 180px;
+      height: 180px;
+      left: -80px;
+      bottom: -110px;
+    }
+
+    .header-inner {
+      position: relative;
+      z-index: 1;
+      width: min(1180px, 92%);
+      margin: auto;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: clamp(28px, 4vw, 40px);
+      line-height: 1.15;
+      letter-spacing: -.7px;
+      margin-bottom: 9px;
+    }
+
+    header p {
+      max-width: 680px;
+      margin: auto;
+      color: rgba(255, 255, 255, .88);
+      font-size: 15px;
+    }
+
+    /* ================= MAIN ================= */
+
+    main {
+      width: min(1180px, 92%);
+      margin: 30px auto 36px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns:
+        minmax(0, 1.05fr)
+        minmax(390px, .95fr);
+
+      gap: 24px;
+      align-items: start;
+    }
+
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, .96);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .location-card {
+      position: sticky;
+      top: 20px;
+    }
+
+    /* ================= SECTION HEADINGS ================= */
+
+    .section-heading {
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      margin-bottom: 20px;
+    }
+
+    .step-number {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+
+      display: grid;
+      place-items: center;
+
+      border-radius: 11px;
+      background: var(--brand-soft);
+      color: var(--brand);
+
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .section-heading h2 {
+      font-size: 20px;
+      line-height: 1.25;
+      letter-spacing: -.2px;
+      margin: 0 0 3px;
+    }
+
+    .section-heading p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ================= SEARCH ================= */
+
+    .search-row {
+      display: grid;
+      grid-template-columns:
+        minmax(0, 1fr)
+        auto
+        auto;
+
+      gap: 9px;
+      margin-bottom: 10px;
+    }
+
+    input,
+    select {
+      width: 100%;
+
+      padding: 12px 13px;
+
+      border: 1px solid #d8dfeb;
+      border-radius: 11px;
+
+      font-size: 14px;
+
+      background: #fff;
+      color: var(--ink);
+
+      transition: .18s ease;
+    }
+
+    input::placeholder {
+      color: #98a2b3;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+
+      border-color: #7590ee;
+
+      box-shadow:
+        0 0 0 4px rgba(49, 91, 234, .10);
+    }
+
+    /* ================= BUTTONS ================= */
+
+    button {
+      border: 0;
+      border-radius: 11px;
+
+      padding: 12px 17px;
+
+      font-size: 14px;
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition:
+        transform .16s ease,
+        background .16s ease,
+        box-shadow .16s ease;
+
+      white-space: nowrap;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .primary {
+      background: var(--brand);
+      color: #fff;
+
+      box-shadow:
+        0 7px 16px rgba(49, 91, 234, .20);
+    }
+
+    .primary:hover {
+      background: var(--brand-dark);
+    }
+
+    .ghost {
+      background: #f1f4fa;
+      color: #2b3a59;
+
+      border: 1px solid #e2e7f0;
+    }
+
+    .ghost:hover {
+      background: #e7ecf6;
+    }
+
+    /* ================= MAP ================= */
+
+    .tip {
+      color: var(--muted);
+      font-size: 12.5px;
+      margin: 0 0 13px;
+    }
+
+    #map {
+      height: 480px;
+
+      border-radius: 15px;
+      border: 1px solid var(--line);
+
+      overflow: hidden;
+
+      box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, .02);
+    }
+
+    /* ================= SELECTED LOCATION ================= */
+
+    .picked {
+      margin-top: 13px;
+
+      padding: 13px 14px;
+
+      background: var(--brand-soft);
+
+      border: 1px solid #dce5ff;
+      border-left: 4px solid var(--brand);
+
+      border-radius: 11px;
+
+      font-size: 13px;
+      color: #334155;
+    }
+
+    .picked strong {
+      color: #294dc6;
+    }
+
+    .picked.ok {
+      background: var(--success-bg);
+      border-color: #cfeedd;
+      border-left-color: var(--success);
+    }
+
+    .picked.ok strong {
+      color: var(--success);
+    }
+
+    /* ================= PROPERTY DETAILS ================= */
+
+    .grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+      gap: 18px;
+    }
+
+    label {
+      display: block;
+
+      font-weight: 750;
+      margin-bottom: 7px;
+
+      font-size: 13.5px;
+    }
+
+    .help {
+      font-size: 12px;
+      line-height: 1.45;
+
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    .go {
+      width: 100%;
+      margin-top: 21px;
+
+      padding: 14px;
+      font-size: 15px;
+    }
+
+    /* ================= RESULT ================= */
+
+    #result {
+      display: none;
+    }
+
+    .result-head {
+      display: flex;
+
+      justify-content: space-between;
+      align-items: flex-start;
+
+      gap: 12px;
+    }
+
+    .result-title {
+      font-size: 13px;
+      font-weight: 700;
+
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .price {
+      font-size: clamp(34px, 4vw, 48px);
+
+      line-height: 1.1;
+
+      font-weight: 850;
+
+      letter-spacing: -1px;
+
+      color: #172554;
+
+      margin: 0;
+    }
+
+    .range {
+      color: var(--muted);
+
+      font-size: 13.5px;
+
+      margin-top: 7px;
+    }
+
+    .conf {
+      display: inline-flex;
+
+      align-items: center;
+
+      padding: 6px 11px;
+
+      border-radius: 999px;
+
+      font-size: 12px;
+      font-weight: 750;
+
+      margin-top: 3px;
+
+      white-space: nowrap;
+    }
+
+    .conf.high {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .conf.mid {
+      background: #fff2d8;
+      color: var(--warning);
+    }
+
+    .conf.low {
+      background: #fde8e8;
+      color: #a12626;
+    }
+
+    /* ================= RESULT STATS ================= */
+
+    .stats {
+      display: grid;
+
+      grid-template-columns:
+        repeat(3, 1fr);
+
+      gap: 11px;
+
+      margin-top: 22px;
+    }
+
+    .stat {
+      background: var(--surface-soft);
+
+      border: 1px solid #e8edf6;
+
+      border-radius: 13px;
+
+      padding: 14px;
+
+      min-height: 82px;
+    }
+
+    .stat span {
+      display: block;
+
+      font-size: 11.5px;
+
+      color: var(--muted);
+
+      margin-bottom: 5px;
+    }
+
+    .stat strong {
+      display: block;
+
+      font-size: 13.5px;
+
+      line-height: 1.4;
+
+      color: #24324f;
+    }
+
+    /* ================= NOTES ================= */
+
+    .notes {
+      margin-top: 16px;
+
+      font-size: 12.5px;
+      line-height: 1.5;
+
+      background: var(--warning-bg);
+
+      border: 1px solid #f4dfb7;
+
+      color: #85510a;
+
+      padding: 13px 14px;
+
+      border-radius: 12px;
+    }
+
+    .notes p + p {
+      margin-top: 7px;
+    }
+
+    /* ================= FOOTER ================= */
+
+    footer {
+      width: min(1180px, 92%);
+
+      margin: 0 auto 0px;
+
+      padding: 16px 16px;
+
+      border-top: 1px solid var(--line);
+
+      color: var(--muted);
+
+      font-size: 12px;
+
+      text-align: center;
+    }
+
+    /* ================= RESPONSIVE ================= */
+
+    @media(max-width:900px) {
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .location-card {
+        position: static;
+      }
+
+      #map {
+        height: 420px;
+      }
+    }
+
+    @media(max-width:640px) {
+
+      header {
+        padding: 32px 18px;
+      }
+
+      main {
+        width: 94%;
+        margin-top: 20px;
+      }
+
+      .card {
+        padding: 18px;
+        border-radius: 16px;
+      }
+
+      .search-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .search-row input {
+        grid-column: 1 / -1;
+      }
+
+      .grid,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      #map {
+        height: 360px;
+      }
+
+      .result-head {
+        flex-direction: column;
+      }
+
+      .conf {
+        margin-top: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ================= HEADER ================= -->
+
+  <header>
+    <div class="header-inner">
+
+      <h1>Apartment Price Predictor</h1>
+
+      <p>
+        Select a location, enter the property details,
+        and get an approximate AI-powered market estimate.
+      </p>
+
+    </div>
+  </header>
+
+
+  <main>
+
+    <div class="layout">
+
+      <!-- =========================================================
+           LEFT SIDE - LOCATION
+      ========================================================== -->
+
+      <section class="card location-card">
+
+        <div class="section-heading">
+
+          <div class="step-number">
+            1
+          </div>
+
+          <div>
+
+            <h2>
+              Choose the location
+            </h2>
+
+            <p>
+              Search a place, use your location,
+              or tap a spot on the map.
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- SEARCH -->
+
+        <div class="search-row">
+
+          <input
+            id="q"
+            type="text"
+            placeholder="Search"
+            aria-label="Search location"
+          >
+
+          <button
+            class="primary"
+            id="searchBtn"
+          >
+            Search
+          </button>
+
+          <button
+            class="ghost"
+            id="gpsBtn"
+          >
+            Use my location
+          </button>
+
+        </div>
+
+
+        <!-- MAP -->
+
+        <div
+          id="map"
+          aria-label="Interactive map"
+        ></div>
+
+
+        <!-- CONFIRMED LOCATION -->
+
+        <div
+          class="picked"
+          id="pickedBox"
+        >
+
+          <strong id="pickedLabel">
+            Confirmed location:
+          </strong>
+
+          <span id="picked">
+            Nothing selected yet
+          </span>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================================================
+           RIGHT SIDE
+      ========================================================== -->
+
+      <div class="right-column">
+
+
+        <!-- =======================================================
+             PROPERTY DETAILS
+        ======================================================== -->
+
+        <section
+          class="card"
+          id="details"
+        >
+
+          <div class="section-heading">
+
+            <div class="step-number">
+              2
+            </div>
+
+            <div>
+
+              <h2>
+                Property details
+              </h2>
+
+              <p>
+                Enter the basic details of the apartment
+                you want to estimate.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="grid">
+
+
+            <!-- BHK -->
+
+            <div>
+
+              <label for="bhk">
+                BHK
+              </label>
+
+              <select id="bhk">
+
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+
+              </select>
+
+            </div>
+
+
+            <!-- CARPET AREA -->
+
+            <div>
+
+              <label for="area">
+                Carpet area (sq ft)
+              </label>
+
+              <input
+                id="area"
+                type="number"
+                value="950"
+                min="150"
+                max="16000"
+                placeholder="e.g. 1250"
+              >
+
+            </div>
+
+
+            <!-- PROPERTY TYPE -->
+
+            <div>
+
+              <label for="type">
+                Property type
+              </label>
+
+              <select id="type">
+
+                <option value="apartment">
+                  Apartment
+                </option>
+
+                <option value="villa">
+                  Villa / Independent house
+                </option>
+
+                <option value="penthouse">
+                  Penthouse
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <!-- PROPERTY AGE -->
+
+            <div>
+
+              <label for="age">
+                Property age
+              </label>
+
+              <select id="age">
+
+                <option value="0">
+                  New / under construction
+                </option>
+
+                <option
+                  value="3"
+                  selected
+                >
+                  1–5 years
+                </option>
+
+                <option value="8">
+                  6–10 years
+                </option>
+
+                <option value="13">
+                  11–15 years
+                </option>
+
+                <option value="20">
+                  More than 15 years
+                </option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+
+          <!-- PREDICT BUTTON -->
+
+          <button
+            class="primary go"
+            id="predictBtn"
+          >
+            Predict price
+          </button>
+
+        </section>
+
+
+        <!-- =======================================================
+             RESULT
+        ======================================================== -->
+
+        <section
+          class="card"
+          id="result"
+          aria-live="polite"
+        >
+
+          <div class="result-head">
+
+            <div>
+
+              <div class="result-title">
+                Estimated apartment price
+              </div>
+
+              <div
+                class="price"
+                id="price"
+              ></div>
+
+              <div
+                class="range"
+                id="range"
+              ></div>
+
+            </div>
+
+
+            <span
+              class="conf"
+              id="conf"
+            ></span>
+
+          </div>
+
+
+          <!-- RESULT INFORMATION -->
+
+          <div class="stats">
+
+
+            <!-- BHK -->
+
+            <div class="stat">
+
+              <span>
+                Selected BHK
+              </span>
+
+              <strong
+                id="resultBhk"
+              ></strong>
+
+            </div>
+
+
+            <!-- PROPERTY TYPE -->
+
+            <div class="stat">
+
+              <span>
+                Property type
+              </span>
+
+              <strong
+                id="resultType"
+              ></strong>
+
+            </div>
+
+
+            <!-- CARPET AREA -->
+
+            <div class="stat">
+
+              <span>
+                Carpet area
+              </span>
+
+              <strong
+                id="resultArea"
+              ></strong>
+
+            </div>
+
+          </div>
+
+
+          <!-- NOTES -->
+
+          <div
+            class="notes"
+            id="notes"
+          ></div>
+
+        </section>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- ================= FOOTER ================= -->
+
+  <footer>
+    Estimates use approximate market rates and are for guidance only.
+    Not financial advice.
+  </footer>
+
+
+  <!-- ================= LEAFLET ================= -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+
+  <script>
+
+    /* ===============================================================
+       DATASET
+
+       Format:
+       [Area Name, Latitude, Longitude, Approx Rs per sq ft]
+    =============================================================== */
+
+    const DATA = [
+
+      ["Worli, Mumbai", 19.0176, 72.8181, 55000],
+      ["Bandra West, Mumbai", 19.0596, 72.8295, 45000],
+      ["Andheri West, Mumbai", 19.1364, 72.8296, 27000],
+      ["Powai, Mumbai", 19.1176, 72.9060, 24000],
+      ["Borivali, Mumbai", 19.2307, 72.8567, 22000],
+      ["Vashi, Navi Mumbai", 19.0771, 72.9986, 15000],
+      ["Thane West", 19.2183, 72.9781, 13500],
+      ["Kharghar, Navi Mumbai", 19.0474, 73.0699, 10500],
+
+      ["Saket, Delhi", 28.5245, 77.2066, 25000],
+      ["Rohini, Delhi", 28.7495, 77.0565, 12000],
+      ["Dwarka, Delhi", 28.5921, 77.0460, 11500],
+      ["Golf Course Rd, Gurugram", 28.4300, 77.1000, 20000],
+      ["Sohna Road, Gurugram", 28.4089, 77.0420, 10500],
+      ["Sector 62, Noida", 28.6273, 77.3649, 8500],
+      ["Greater Noida West", 28.6015, 77.4400, 5800],
+
+      ["Indiranagar, Bengaluru", 12.9784, 77.6408, 17000],
+      ["Koramangala, Bengaluru", 12.9352, 77.6245, 14500],
+      ["Hebbal, Bengaluru", 13.0358, 77.5970, 10500],
+      ["Whitefield, Bengaluru", 12.9698, 77.7500, 9500],
+      ["Sarjapur Road, Bengaluru", 12.9100, 77.6870, 9000],
+      ["Yelahanka, Bengaluru", 13.1007, 77.5963, 7500],
+      ["Electronic City, Bengaluru", 12.8452, 77.6602, 6500],
+
+      ["Banjara Hills, Hyderabad", 17.4126, 78.4482, 15000],
+      ["Financial District, Hyderabad", 17.4170, 78.3400, 10000],
+      ["Gachibowli, Hyderabad", 17.4401, 78.3489, 9500],
+      ["Kondapur, Hyderabad", 17.4600, 78.3570, 8500],
+      ["Kukatpally, Hyderabad", 17.4948, 78.3996, 7500],
+      ["Uppal, Hyderabad", 17.4058, 78.5591, 6000],
+
+      ["Koregaon Park, Pune", 18.5362, 73.8940, 15000],
+      ["Baner, Pune", 18.5590, 73.7868, 11000],
+      ["Kharadi, Pune", 18.5515, 73.9477, 9500],
+      ["Wakad, Pune", 18.5990, 73.7600, 8000],
+      ["Hadapsar, Pune", 18.5089, 73.9259, 8000],
+      ["Hinjewadi, Pune", 18.5912, 73.7389, 7500],
+
+      ["Adyar, Chennai", 13.0012, 80.2565, 15000],
+      ["Anna Nagar, Chennai", 13.0850, 80.2101, 14000],
+      ["Velachery, Chennai", 12.9815, 80.2180, 9000],
+      ["OMR Sholinganallur, Chennai", 12.9010, 80.2279, 7000],
+      ["Tambaram, Chennai", 12.9249, 80.1000, 6000],
+
+      ["Ballygunge, Kolkata", 22.5270, 88.3650, 12500],
+      ["Salt Lake, Kolkata", 22.5867, 88.4170, 9000],
+      ["New Town, Kolkata", 22.5800, 88.4790, 6500],
+      ["Howrah", 22.5958, 88.2636, 5000],
+
+      ["Navrangpura, Ahmedabad", 23.0369, 72.5605, 8000],
+      ["Prahlad Nagar, Ahmedabad", 23.0120, 72.5100, 7500],
+      ["Vastrapur, Ahmedabad", 23.0350, 72.5290, 7000],
+      ["SG Highway, Ahmedabad", 23.0395, 72.5066, 6500],
+      ["Bopal, Ahmedabad", 23.0300, 72.4650, 5200],
+      ["Gota, Ahmedabad", 23.1000, 72.5450, 4800],
+      ["Maninagar, Ahmedabad", 22.9950, 72.6000, 4500],
+
+      ["Vesu, Surat", 21.1400, 72.7700, 5500],
+      ["Alkapuri, Vadodara", 22.3072, 73.1812, 5500],
+      ["Vaishali Nagar, Jaipur", 26.9124, 75.7400, 5500],
+      ["Gomti Nagar, Lucknow", 26.8500, 81.0000, 6000],
+      ["Chandigarh", 30.7333, 76.7794, 9000],
+      ["Kochi", 9.9816, 76.2999, 7500],
+      ["Vijay Nagar, Indore", 22.7533, 75.8937, 5500],
+      ["Nagpur", 21.1458, 79.0882, 4800],
+      ["Bhopal", 23.2599, 77.4126, 4500],
+      ["Panaji, Goa", 15.4909, 73.8278, 9500],
+      ["Coimbatore", 11.0168, 76.9558, 5500]
+
+    ];
+
+
+    /* ===============================================================
+       CARPET TO BUILT-UP CONVERSION
+    =============================================================== */
+
+    const CARPET_TO_BUILTUP = 1.25;
+
+
+    /* ===============================================================
+       HAVERSINE DISTANCE
+    =============================================================== */
+
+    function km(a, b, c, d) {
+
+      const R = 6371;
+
+      const r = Math.PI / 180;
+
+      const dLat = (c - a) * r;
+
+      const dLon = (d - b) * r;
+
+      const x =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(a * r) *
+        Math.cos(c * r) *
+        Math.sin(dLon / 2) ** 2;
+
+      return 2 * R *
+        Math.asin(Math.sqrt(x));
+
+    }
+
+
+    /* ===============================================================
+       KNN PRICE MODEL
+    =============================================================== */
+
+    function predictRate(lat, lon, k = 4) {
+
+      const near = DATA
+        .map(r => ({
+
+          name: r[0],
+
+          rate: r[3],
+
+          d: km(
+            lat,
+            lon,
+            r[1],
+            r[2]
+          )
+
+        }))
+
+        .sort((a, b) =>
+          a.d - b.d
+        )
+
+        .slice(0, k);
+
+
+      let wSum = 0;
+
+      let rSum = 0;
+
+
+      near.forEach(n => {
+
+        n.w =
+          1 /
+          Math.pow(
+            n.d + 1,
+            2
+          );
+
+        wSum += n.w;
+
+        rSum +=
+          n.w *
+          n.rate;
+
+      });
+
+
+      return {
+
+        rate: rSum / wSum,
+
+        near
+
+      };
+
+    }
+
+
+    /* ===============================================================
+       PROPERTY TYPE FACTORS
+    =============================================================== */
+
+    const TYPE_F = {
+
+      apartment: 1,
+
+      villa: 1.15,
+
+      penthouse: 1.35
+
+    };
+
+
+    /* ===============================================================
+       AGE FACTOR
+    =============================================================== */
+
+    function ageFactor(age) {
+
+      if (age === 0)
+        return 1.03;
+
+      if (age <= 3)
+        return 1;
+
+      if (age <= 8)
+        return 0.93;
+
+      if (age <= 13)
+        return 0.86;
+
+      return 0.78;
+
+    }
+
+
+    /* ===============================================================
+       SIZE FACTOR
+    =============================================================== */
+
+    function sizeFactor(area) {
+
+      if (area < 750)
+        return 1.06;
+
+      if (area <= 1900)
+        return 1;
+
+      if (area <= 3100)
+        return 0.96;
+
+      return 0.92;
+
+    }
+
+
+    /* ===============================================================
+       PRICE FORMATTING
+    =============================================================== */
+
+    function inr(x) {
+
+      if (x >= 1e7) {
+
+        return "₹" +
+          (x / 1e7).toFixed(2) +
+          " Cr";
+
+      }
+
+      if (x >= 1e5) {
+
+        return "₹" +
+          (x / 1e5).toFixed(2) +
+          " Lakh";
+
+      }
+
+      return "₹" +
+        Math.round(x)
+          .toLocaleString("en-IN");
+
+    }
+
+
+    /* ===============================================================
+       SHORT DOM FUNCTION
+    =============================================================== */
+
+    const $ = id =>
+      document.getElementById(id);
+
+
+    /* ===============================================================
+       LOCATION STATE
+    =============================================================== */
+
+    let tentative = null;
+
+    let pos = null;
+
+    let marker = null;
+
+
+    /* ===============================================================
+       MAP INITIALIZATION
+    =============================================================== */
+
+    const map =
+      L.map("map")
+        .setView(
+          [20.59, 78.96],
+          5
+        );
+
+
+    L.tileLayer(
+      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+
+        maxZoom: 18,
+
+        attribution:
+          "&copy; OpenStreetMap contributors"
+
+      }
+    ).addTo(map);
+
+
+    /* ===============================================================
+       DATASET MAP MARKERS
+    =============================================================== */
+
+    DATA.forEach(r => {
+
+      L.circleMarker(
+
+        [r[1], r[2]],
+
+        {
+
+          radius: 4,
+
+          color: "#1f4fd8",
+
+          weight: 1,
+
+          fillOpacity: .5
+
+        }
+
+      )
+
+      .bindTooltip(
+        r[0] +
+        " – ₹" +
+        r[3].toLocaleString("en-IN") +
+        "/sq ft"
+      )
+
+      .addTo(map);
+
+    });
+
+
+    /* ===============================================================
+       SET PICKED LOCATION
+    =============================================================== */
+
+    function setPicked(
+      label,
+      text,
+      ok
+    ) {
+
+      $("pickedLabel")
+        .textContent = label;
+
+      $("picked")
+        .textContent = text;
+
+      $("pickedBox")
+        .className =
+        "picked" +
+        (ok ? " ok" : "");
+
+    }
+
+
+    /* ===============================================================
+       PLACE MARKER
+    =============================================================== */
+
+    function placeMarker(
+      lat,
+      lon,
+      zoomIn
+    ) {
+
+      if (marker)
+        map.removeLayer(marker);
+
+      marker =
+        L.marker([
+          lat,
+          lon
+        ]).addTo(map);
+
+      if (zoomIn) {
+
+        map.setView(
+          [lat, lon],
+          Math.max(
+            map.getZoom(),
+            13
+          )
+        );
+
+      }
+
+    }
+
+
+    /* ===============================================================
+       REVERSE GEOCODING
+    =============================================================== */
+
+    async function reverse(
+      lat,
+      lon
+    ) {
+
+      try {
+
+        const r =
+          await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`
+          );
+
+        const j =
+          await r.json();
+
+        return j.display_name ||
+          null;
+
+      } catch (e) {
+
+        return null;
+
+      }
+
+    }
+
+
+    /* ===============================================================
+       MAP CLICK
+    =============================================================== */
+
+    map.on(
+      "click",
+      async e => {
+
+        const lat =
+          e.latlng.lat;
+
+        const lon =
+          e.latlng.lng;
+
+
+        const t = {
+
+          lat,
+
+          lon,
+
+          label:
+            lat.toFixed(4) +
+            ", " +
+            lon.toFixed(4)
+
+        };
+
+
+        tentative = t;
+
+        pos = null;
+
+
+        $("q").value = "";
+
+
+        placeMarker(
+          lat,
+          lon,
+          false
+        );
+
+
+        setPicked(
+
+          "Pinned (not confirmed):",
+
+          t.label +
+          " – press Search to confirm",
+
+          false
+
+        );
+
+
+        const name =
+          await reverse(
+            lat,
+            lon
+          );
+
+
+        if (
+          name &&
+          tentative === t
+        ) {
+
+          t.label = name;
+
+          $("q").value =
+            name;
+
+          setPicked(
+
+            "Pinned (not confirmed):",
+
+            name +
+            " – press Search to confirm",
+
+            false
+
+          );
+
+        }
+
+      }
+    );
+
+
+    /* ===============================================================
+       CONFIRM LOCATION
+    =============================================================== */
+
+    function confirmLocation(
+      lat,
+      lon,
+      label
+    ) {
+
+      pos = {
+        lat,
+        lon
+      };
+
+      tentative = null;
+
+
+      placeMarker(
+        lat,
+        lon,
+        true
+      );
+
+
+      $("q").value =
+        label;
+
+
+      setPicked(
+
+        "Confirmed location:",
+
+        label,
+
+        true
+
+      );
+
+
+      $("details")
+        .scrollIntoView({
+          behavior: "smooth"
+        });
+
+
+      setTimeout(
+        () =>
+          $("area")
+            .focus({
+              preventScroll: true
+            }),
+        500
+      );
+
+    }
+
+
+    /* ===============================================================
+       SEARCH LOCATION
+    =============================================================== */
+
+    async function onSearch() {
+
+      const q =
+        $("q").value.trim();
+
+
+      /* SEARCH TEXT */
+
+      if (q) {
+
+        try {
+
+          const r =
+            await fetch(
+
+              "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=in&q=" +
+              encodeURIComponent(q)
+
+            );
+
+
+          const j =
+            await r.json();
+
+
+          if (!j.length) {
+
+            alert(
+              "Location not found. Try adding the city name."
+            );
+
+            return;
+
+          }
+
+
+          confirmLocation(
+
+            parseFloat(j[0].lat),
+
+            parseFloat(j[0].lon),
+
+            j[0].display_name
+
+          );
+
+
+        } catch (e) {
+
+          alert(
+            "Search failed. Check your internet connection and try again."
+          );
+
+        }
+
+
+      }
+
+
+      /* CONFIRM MAP PIN */
+
+      else if (tentative) {
+
+        confirmLocation(
+
+          tentative.lat,
+
+          tentative.lon,
+
+          tentative.label
+
+        );
+
+      }
+
+
+      else {
+
+        alert(
+          "Type a place name, or tap a spot on the map first."
+        );
+
+      }
+
+    }
+
+
+    /* ===============================================================
+       SEARCH BUTTON
+    =============================================================== */
+
+    $("searchBtn").onclick =
+      onSearch;
+
+
+    /* ENTER KEY SEARCH */
+
+    $("q").addEventListener(
+      "keydown",
+      e => {
+
+        if (e.key === "Enter")
+          onSearch();
+
+      }
+    );
+
+
+    /* ===============================================================
+       USE MY LOCATION
+    =============================================================== */
+
+    $("gpsBtn").onclick =
+      () => {
+
+        if (!navigator.geolocation) {
+
+          alert(
+            "Location is not supported in this browser."
+          );
+
+          return;
+
+        }
+
+
+        navigator.geolocation
+          .getCurrentPosition(
+
+            async p => {
+
+              const lat =
+                p.coords.latitude;
+
+              const lon =
+                p.coords.longitude;
+
+
+              const name =
+                await reverse(
+                  lat,
+                  lon
+                );
+
+
+              confirmLocation(
+
+                lat,
+
+                lon,
+
+                name ||
+                lat.toFixed(4) +
+                ", " +
+                lon.toFixed(4)
+
+              );
+
+            },
+
+            () => {
+
+              alert(
+                "Could not get your location. Allow location access or use search."
+              );
+
+            }
+
+          );
+
+      };
+
+
+    /* ===============================================================
+       PREDICT PRICE
+    =============================================================== */
+
+    $("predictBtn").onclick =
+      () => {
+
+
+        /* LOCATION CHECK */
+
+        if (!pos) {
+
+          alert(
+
+            tentative
+
+              ? "Press the Search button to confirm the pin you tapped on the map."
+
+              : "Select a location first: search a place, or tap the map and press Search."
+
+          );
+
+          return;
+
+        }
+
+
+        /* GET INPUTS */
+
+        const bhk =
+          +$("bhk").value;
+
+        const carpet =
+          +$("area").value;
+
+        const type =
+          $("type").value;
+
+        const age =
+          +$("age").value;
+
+
+        /* AREA VALIDATION */
+
+        if (
+          !(carpet >= 150 &&
+            carpet <= 16000)
+        ) {
+
+          alert(
+            "Enter a carpet area between 150 and 16,000 sq ft."
+          );
+
+          return;
+
+        }
+
+
+        /* =========================================================
+           MODEL CALCULATION
+        ========================================================== */
+
+        const builtUp =
+          carpet *
+          CARPET_TO_BUILTUP;
+
+
+        const {
+          rate,
+          near
+        } =
+          predictRate(
+            pos.lat,
+            pos.lon
+          );
+
+
+        const d0 =
+          near[0].d;
+
+
+        const psf =
+          rate *
+          TYPE_F[type] *
+          ageFactor(age) *
+          sizeFactor(builtUp);
+
+
+        const price =
+          psf *
+          builtUp;
+
+
+        /* =========================================================
+           CONFIDENCE
+        ========================================================== */
+
+        let level =
+          "high";
+
+        let spread =
+          0.08;
+
+        let label =
+          "High confidence";
+
+
+        if (d0 > 15) {
+
+          level =
+            "mid";
+
+          spread =
+            0.14;
+
+          label =
+            "Medium confidence";
+
+        }
+
+
+        if (d0 > 60) {
+
+          level =
+            "low";
+
+          spread =
+            0.25;
+
+          label =
+            "Low confidence";
+
+        }
+
+
+        /* =========================================================
+           DISPLAY PRICE
+        ========================================================== */
+
+        $("price")
+          .textContent =
+          inr(price);
+
+
+        $("range")
+          .textContent =
+
+          "Likely range: " +
+
+          inr(
+            price *
+            (1 - spread)
+          ) +
+
+          " – " +
+
+          inr(
+            price *
+            (1 + spread)
+          );
+
+
+        /* CONFIDENCE */
+
+        const c =
+          $("conf");
+
+
+        c.textContent =
+          label;
+
+
+        c.className =
+          "conf " +
+          level;
+
+
+        /* =========================================================
+           RESULT INFORMATION
+        ========================================================== */
+
+        $("resultBhk")
+          .textContent =
+          bhk +
+          " BHK";
+
+
+        $("resultType")
+          .textContent =
+
+          type === "apartment"
+            ? "Apartment"
+
+            : type === "villa"
+              ? "Villa / Independent house"
+
+              : "Penthouse";
+
+
+        $("resultArea")
+          .textContent =
+
+          Math.round(carpet)
+            .toLocaleString("en-IN") +
+          " sq ft";
+
+
+        /* =========================================================
+           NOTES
+        ========================================================== */
+
+        const notes = [];
+
+
+        if (level === "low") {
+
+          notes.push(
+            "No reference data within 60 km of this spot, so the estimate is rough. Add local data to improve it."
+          );
+
+        }
+
+
+        const perBhk =
+          carpet / bhk;
+
+
+        if (perBhk < 250) {
+
+          notes.push(
+
+            "The carpet area looks small for " +
+            bhk +
+            " BHK (" +
+            Math.round(perBhk) +
+            " sq ft per bedroom). Please double-check it."
+
+          );
+
+        }
+
+
+        if (perBhk > 1200) {
+
+          notes.push(
+
+            "The carpet area looks very large for " +
+            bhk +
+            " BHK. Please double-check it."
+
+          );
+
+        }
+
+
+
+        notes.push(
+
+          "Actual prices vary with floor, view, builder, amenities, exact street and market conditions."
+
+        );
+
+
+        const notesBox =
+          $("notes");
+
+
+        if (notesBox) {
+
+          notesBox.innerHTML =
+            notes
+              .map(
+                () =>
+                  "<p></p>"
+              )
+              .join("");
+
+
+          [
+            ...notesBox.children
+          ].forEach(
+            (p, i) => {
+
+              p.textContent =
+                notes[i];
+
+            }
+          );
+
+        }
+
+
+        /* =========================================================
+           SHOW RESULT
+        ========================================================== */
+
+        $("result").style.display =
+          "block";
+
+
+        $("result")
+          .scrollIntoView({
+            behavior: "smooth"
+          });
+
+      };
+
+  </script>
+
+</body>
+
+</html>
